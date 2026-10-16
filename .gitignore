@@ -1,4 +1,4 @@
-```gitignore
+
 # Java / Maven
 target/
 *.class
@@ -20,6 +20,7 @@ coverage/
 .env
 .env.*
 !.env.example
+.jwt-secret-local
 
 # Spring Boot local and secret configuration
 application-local.properties
@@ -56,5 +57,6 @@ failsafe-reports/
 # Local database and generated files
 *.dump
 *.bak
+
 # Local Spring Boot configuration containing credentials
 /src/main/resources/application.properties
