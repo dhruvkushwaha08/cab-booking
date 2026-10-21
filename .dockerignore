@@ -1,0 +1,10 @@
+node_modules
+frontend/node_modules
+frontend/dist
+target
+.git
+.jwt-secret-local
+.env
+**/.env
+**/application-local.properties
+**/application-secret.properties

@@ -84,6 +84,42 @@ public class DriverRideController {
                 Map.of("count", rides.size(), "rides", rides));
     }
 
+    // Retrieve the driver's active ride after login or page refresh.
+    @GetMapping("/active")
+    public ResponseEntity<?> getActiveRide(
+            Authentication authentication) {
+
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("User not found."));
+
+        if (user.getRole() != User.Role.DRIVER) {
+            return ResponseEntity.status(403).body(
+                    Map.of("error",
+                            "Only drivers can view their active ride."));
+        }
+
+        Driver driver = driverRepository.findByUserId(user.getId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Driver profile not found."));
+
+        return rideRepository
+                .findByDriverIdAndStatusIn(
+                        driver.getId(), ACTIVE_RIDE_STATUSES)
+                .stream()
+                .findFirst()
+                .map(ride -> ResponseEntity.ok(Map.<String, Object>of(
+                        "rideId", ride.getId(),
+                        "pickupLocation", ride.getPickupLocation(),
+                        "dropoffLocation", ride.getDropoffLocation(),
+                        "distanceKm", ride.getDistanceKm(),
+                        "estimatedFare", ride.getEstimatedFare(),
+                        "status", ride.getStatus().name()
+                )))
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
     @PutMapping("/{rideId}/accept")
     @Transactional
     public ResponseEntity<?> acceptRide(

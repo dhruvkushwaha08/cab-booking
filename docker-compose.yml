@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: cabgo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cab_booking_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in your environment}
+    ports:
+      - "5433:5432"
+    volumes:
+      - cabgo_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cab_booking_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cabgo-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cab_booking_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in your environment}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in your environment}
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8081
+    container_name: cabgo-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  cabgo_postgres_data:
